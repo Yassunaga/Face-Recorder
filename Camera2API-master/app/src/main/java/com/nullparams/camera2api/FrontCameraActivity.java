@@ -288,8 +288,14 @@ public class FrontCameraActivity extends AppCompatActivity{
 
                             colorChangeRunnable = new Runnable(){
                                 public void run(){
-                                    if(colorFragment.isAdded() && iterations > 0){
-                                        colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(getRandomColor(colorList));
+                                    if(colorFragment.isAdded() && iterations >= 0){
+                                        if(iterations == 0){
+                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.WHITE);
+                                        }else if(iterations == 1){
+                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.BLACK);
+                                        }else{
+                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(getRandomColor(colorList));
+                                        }
                                         handler.postDelayed(this, delay);
                                         iterations--;
                                     }else{
