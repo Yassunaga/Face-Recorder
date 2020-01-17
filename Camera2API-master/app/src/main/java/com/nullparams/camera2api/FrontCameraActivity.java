@@ -35,14 +35,18 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import static android.os.Environment.DIRECTORY_PICTURES;
@@ -69,7 +73,6 @@ public class FrontCameraActivity extends AppCompatActivity{
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0);
     }
 
-    private String cameraId;
     private CameraDevice cameraDevice;
     private CameraCaptureSession cameraCaptureSessions;
     private CaptureRequest.Builder captureRequestBuilder;
@@ -77,15 +80,18 @@ public class FrontCameraActivity extends AppCompatActivity{
     private ImageReader imageReader;
     private Integer mSensorOrientation;
     private ColorFragment colorFragment;
-    private List<Integer> colorList;
+    private Map<String, Integer> colorMap;
     private int iterations;
     private Random random;
 
     private Runnable colorChangeRunnable;
     private Handler handler;
     private final int delay = 1000; //milliseconds
+    private String filename;
 
-    private File file;
+    private File videoFile;
+    private File textFile;
+    private BufferedWriter writer;
 
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
@@ -97,7 +103,6 @@ public class FrontCameraActivity extends AppCompatActivity{
 
     private MediaRecorder mMediaRecorder;
     private boolean mIsRecordingVideo;
-    private Surface mRecorderSurface;
 
     public FrontCameraActivity() {
     }
@@ -146,11 +151,12 @@ public class FrontCameraActivity extends AppCompatActivity{
 
         }
     };
+
     private void openCamera(int cameraType) {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         Log.e("tag", "is camera open");
         try {
-            cameraId = manager.getCameraIdList()[cameraType];
+            String cameraId = manager.getCameraIdList()[cameraType];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -237,12 +243,16 @@ public class FrontCameraActivity extends AppCompatActivity{
             return;
         }
         try {
-            colorList = createRandomColorList();
+            colorMap = createRandomColorMap();
             iterations = 4;
             closePreviewSession();
 
             //A new file must be created before setting up the output file on setUpMediaRecorder
-            file = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES)+"/"+System.currentTimeMillis()+".MP4");
+            filename = String.valueOf(System.currentTimeMillis());
+            videoFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".MP4");
+            textFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".txt");
+            writer = new BufferedWriter(new FileWriter(textFile));
+
             setUpMediaRecorder();
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
@@ -256,7 +266,7 @@ public class FrontCameraActivity extends AppCompatActivity{
             captureRequestBuilder.addTarget(previewSurface);
 
             // Set up Surface for the MediaRecorder
-            mRecorderSurface = mMediaRecorder.getSurface();
+            Surface mRecorderSurface = mMediaRecorder.getSurface();
             surfaces.add(mRecorderSurface);
             captureRequestBuilder.addTarget(mRecorderSurface);
 
@@ -266,7 +276,6 @@ public class FrontCameraActivity extends AppCompatActivity{
             captureRequestBuilder.set(CaptureRequest.EDGE_MODE, CaptureRequest.EDGE_MODE_HIGH_QUALITY);
             captureRequestBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
 
-//            captureRequestBuilder.set(CaptureRequest.JPEG_QUALITY, (byte) 100);
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
             cameraDevice.createCaptureSession(surfaces, new CameraCaptureSession.StateCallback() {
@@ -290,21 +299,33 @@ public class FrontCameraActivity extends AppCompatActivity{
 
                             colorChangeRunnable = new Runnable(){
                                 public void run(){
-                                    if(colorFragment.isAdded() && iterations >= 0){
-                                        if(iterations == 0){
-                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.WHITE);
-                                        }else if(iterations == 1){
-                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.BLACK);
+                                    try{
+                                        if(colorFragment.isAdded() && iterations >= 0){
+                                            if(iterations == 0){
+                                                writer.write("WHITE");
+                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.WHITE);
+                                            }else if(iterations == 1){
+                                                writer.write("BLACK" + "_");
+                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.BLACK);
+                                            }else{
+                                                String key = getRandomColorKey(colorMap);
+                                                assert key != null;
+                                                Integer newColor = colorMap.get(key);
+                                                assert newColor != null;
+                                                colorMap.remove(key);
+                                                writer.write(key + "_");
+                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(newColor);
+                                            }
+                                            handler.postDelayed(this, delay);
+                                            iterations--;
                                         }else{
-                                            colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(getRandomColor(colorList));
+                                            handler.removeCallbacksAndMessages(null);
+                                            if(mIsRecordingVideo){
+                                                stopRecordingVideo();
+                                            }
                                         }
-                                        handler.postDelayed(this, delay);
-                                        iterations--;
-                                    }else{
-                                        handler.removeCallbacksAndMessages(null);
-                                        if(mIsRecordingVideo){
-                                            stopRecordingVideo();
-                                        }
+                                    }catch (IOException e){
+                                        Toast.makeText(getBaseContext(), "Problem in writting text file", Toast.LENGTH_LONG).show();
                                     }
                                 }
                             };
@@ -327,25 +348,23 @@ public class FrontCameraActivity extends AppCompatActivity{
 
     }
 
-    private int getRandomColor(List<Integer> colorList){
-        int randomIndex = random.nextInt(colorList.size());
-        int randomColor = colorList.get(randomIndex);
-        colorList.remove(randomIndex);
-        return randomColor;
+    private String getRandomColorKey(Map<String, Integer> colors){
+        if(colors.size() > 0){
+            List<String> colorKeys = new ArrayList<>(colors.keySet());
+            return colorKeys.get(random.nextInt(colorKeys.size()));
+        }
+        return null;
     }
 
-    private List<Integer> createRandomColorList(){
-        List<Integer> colors = new ArrayList<>();
-        colors.add(Color.RED);
-        colors.add(Color.GREEN);
-        colors.add(Color.BLUE);
-        colors.add(Color.YELLOW);
-        //Orange
-        colors.add(0xFFFF7F00);
-        //Indigo
-        colors.add(0xFF4B0082);
-        //Violet
-        colors.add(0xFF8F00FF);
+    private Map<String, Integer> createRandomColorMap(){
+        Map<String, Integer> colors = new HashMap<>();
+        colors.put("RED", Color.RED);
+        colors.put("GREEN", Color.GREEN);
+        colors.put("YELLOW", Color.YELLOW);
+        colors.put("BLUE", Color.BLUE);
+        colors.put("ORANGE", 0xFFFF7F00);
+        colors.put("INDIGO", 0xFF4B0082);
+        colors.put("VIOLET", 0xFF8F00FF);
         return colors;
     }
 
@@ -357,7 +376,7 @@ public class FrontCameraActivity extends AppCompatActivity{
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mMediaRecorder.setOutputFile(file.toString());
+        mMediaRecorder.setOutputFile(videoFile.toString());
         mMediaRecorder.setVideoEncodingBitRate(10000000);
         mMediaRecorder.setVideoFrameRate(30);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.HEVC);
@@ -389,9 +408,14 @@ public class FrontCameraActivity extends AppCompatActivity{
             fragmentTransaction.commit();
         }
 
-        Toast.makeText(FrontCameraActivity.this, "Video saved: " + file.toString(),
-                Toast.LENGTH_SHORT).show();
+        try {
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        Toast.makeText(FrontCameraActivity.this, "Video saved: " + videoFile.toString(),
+                Toast.LENGTH_SHORT).show();
         createCameraPreview();
     }
 
