@@ -110,7 +110,6 @@ public class FrontCameraActivity extends AppCompatActivity{
         textureView = findViewById(R.id.tvRecordVideo);
         button = findViewById(R.id.btnRecord);
 
-        file = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES)+"/"+System.currentTimeMillis()+".MP4");
         handler = new Handler();
         colorFragment = new ColorFragment();
         random = new Random();
@@ -152,7 +151,6 @@ public class FrontCameraActivity extends AppCompatActivity{
         Log.e("tag", "is camera open");
         try {
             cameraId = manager.getCameraIdList()[cameraType];
-            iterations = 4;
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraId);
             StreamConfigurationMap map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
@@ -240,7 +238,11 @@ public class FrontCameraActivity extends AppCompatActivity{
         }
         try {
             colorList = createRandomColorList();
+            iterations = 4;
             closePreviewSession();
+
+            //A new file must be created before setting up the output file on setUpMediaRecorder
+            file = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES)+"/"+System.currentTimeMillis()+".MP4");
             setUpMediaRecorder();
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
