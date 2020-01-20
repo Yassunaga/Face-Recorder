@@ -305,14 +305,7 @@ public class FrontCameraActivity extends AppCompatActivity{
                             colorChangeRunnable = new Runnable(){
                                 public void run(){
                                     try{
-                                        if(colorFragment.isAdded() && iterations >= 0){
-                                            if(iterations == 0){
-                                                writer.write("WHITE");
-                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.WHITE);
-                                            }else if(iterations == 1){
-                                                writer.write("BLACK" + "_");
-                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.BLACK);
-                                            }else{
+                                        if(colorFragment.isAdded() && iterations > 0){
 //                                                String key = getRandomColorKey(colorMap);
 //                                                assert key != null;
 //                                                Integer newColor = colorMap.get(key);
@@ -322,7 +315,6 @@ public class FrontCameraActivity extends AppCompatActivity{
                                                 setRandomColorARGB(colorARGB);
                                                 writer.write("(" + colorARGB.getRed() + "," + colorARGB.getGreen() + "," + colorARGB.getBlue() + ")" + "\n");
                                                 colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(colorARGB.getColor());
-                                            }
                                             handler.postDelayed(this, delay);
                                             iterations--;
                                         }else{
@@ -374,13 +366,12 @@ public class FrontCameraActivity extends AppCompatActivity{
         return colors;
     }
 
-    private ColorARGB setRandomColorARGB(ColorARGB colorARGB){
+    private void setRandomColorARGB(ColorARGB colorARGB){
         colorARGB.setRed(random.nextInt(256));
         colorARGB.setBlue(random.nextInt(256));
         colorARGB.setGreen(random.nextInt(256));
         colorARGB.setAlpha(255);
         colorARGB.setColor(Color.argb(colorARGB.getAlpha(), colorARGB.getRed(), colorARGB.getGreen(), colorARGB.getBlue()));
-        return colorARGB;
     }
 
     private void setUpMediaRecorder() throws IOException {
