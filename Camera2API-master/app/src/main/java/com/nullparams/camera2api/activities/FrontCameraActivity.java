@@ -1,9 +1,8 @@
-package com.nullparams.camera2api;
+package com.nullparams.camera2api.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -30,6 +29,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -37,11 +37,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.nullparams.camera2api.R;
+import com.nullparams.camera2api.fragments.ColorFragment;
+import com.nullparams.camera2api.models.ColorARGB;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -81,6 +84,7 @@ public class FrontCameraActivity extends AppCompatActivity{
     private Integer mSensorOrientation;
     private ColorFragment colorFragment;
     private Map<String, Integer> colorMap;
+    private ColorARGB colorARGB;
     private int iterations;
     private Random random;
 
@@ -243,7 +247,8 @@ public class FrontCameraActivity extends AppCompatActivity{
             return;
         }
         try {
-            colorMap = createRandomColorMap();
+            //colorMap = createRandomColorMap();
+            colorARGB = new ColorARGB();
             iterations = 4;
             closePreviewSession();
 
@@ -308,13 +313,15 @@ public class FrontCameraActivity extends AppCompatActivity{
                                                 writer.write("BLACK" + "_");
                                                 colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(Color.BLACK);
                                             }else{
-                                                String key = getRandomColorKey(colorMap);
-                                                assert key != null;
-                                                Integer newColor = colorMap.get(key);
-                                                assert newColor != null;
-                                                colorMap.remove(key);
-                                                writer.write(key + "_");
-                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(newColor);
+//                                                String key = getRandomColorKey(colorMap);
+//                                                assert key != null;
+//                                                Integer newColor = colorMap.get(key);
+//                                                assert newColor != null;
+//                                                colorMap.remove(key);
+//                                                writer.write(key + "_");
+                                                setRandomColorARGB(colorARGB);
+                                                writer.write("(" + colorARGB.getRed() + "," + colorARGB.getGreen() + "," + colorARGB.getBlue() + ")" + "\n");
+                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(colorARGB.getColor());
                                             }
                                             handler.postDelayed(this, delay);
                                             iterations--;
@@ -338,7 +345,6 @@ public class FrontCameraActivity extends AppCompatActivity{
 
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
-
                     Toast.makeText(FrontCameraActivity.this, "Failed", Toast.LENGTH_SHORT).show();
                 }
             }, mBackgroundHandler);
@@ -366,6 +372,15 @@ public class FrontCameraActivity extends AppCompatActivity{
         colors.put("INDIGO", 0xFF4B0082);
         colors.put("VIOLET", 0xFF8F00FF);
         return colors;
+    }
+
+    private ColorARGB setRandomColorARGB(ColorARGB colorARGB){
+        colorARGB.setRed(random.nextInt(256));
+        colorARGB.setBlue(random.nextInt(256));
+        colorARGB.setGreen(random.nextInt(256));
+        colorARGB.setAlpha(255);
+        colorARGB.setColor(Color.argb(colorARGB.getAlpha(), colorARGB.getRed(), colorARGB.getGreen(), colorARGB.getBlue()));
+        return colorARGB;
     }
 
     private void setUpMediaRecorder() throws IOException {
@@ -481,5 +496,11 @@ public class FrontCameraActivity extends AppCompatActivity{
                 finish();
             }
         }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        return super.onTouchEvent(event);
     }
 }

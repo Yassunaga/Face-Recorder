@@ -1,4 +1,4 @@
-package com.nullparams.camera2api;
+package com.nullparams.camera2api.activities;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -42,6 +42,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.nullparams.camera2api.R;
 import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
 
