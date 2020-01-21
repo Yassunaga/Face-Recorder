@@ -573,7 +573,7 @@ public class FrontCameraActivity extends AppCompatActivity{
             e.printStackTrace();
         }
 
-
+        int test;
         return super.onTouchEvent(event);
     }
 
