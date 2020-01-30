@@ -89,10 +89,10 @@ public class FrontCameraActivity extends AppCompatActivity{
     private ImageReader imageReader;
     private Integer mSensorOrientation;
     private ColorFragment colorFragment;
-    private Map<String, Integer> colorMap;
     private ColorARGB colorARGB;
     private int iterations;
     private Random random;
+    private boolean isRecordingSessionRunning = false;
 
     private Runnable colorChangeRunnable;
     private Handler handler;
@@ -132,10 +132,10 @@ public class FrontCameraActivity extends AppCompatActivity{
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mIsRecordingVideo) {
-                    stopRecordingVideo();
-                } else {
-                    startRecordingVideo();
+                if(!isRecordingSessionRunning){
+                    initRecord();
+                }else{
+                    finishRecord();
                 }
             }
         });
@@ -249,24 +249,61 @@ public class FrontCameraActivity extends AppCompatActivity{
         }
     }
 
+    private void initRecord(){
+        isRecordingSessionRunning = true;
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.add(R.id.activity_main, colorFragment);
+        fragmentTransaction.commit();
+
+        button.setText("Stop");
+        button.setBackgroundColor(Color.TRANSPARENT);
+
+        colorChangeRunnable = new Runnable(){
+            public void run(){
+                    if(mIsRecordingVideo){
+                        stopRecordingVideo();
+                    }else{
+                        startRecordingVideo();
+                    }
+                    handler.postDelayed(this, delay);
+            }
+        };
+        handler.postDelayed(colorChangeRunnable, delay);
+    }
+
+
+    private void finishRecord(){
+        isRecordingSessionRunning = false;
+        handler.removeCallbacksAndMessages(null);
+        if(colorFragment.isAdded()){
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.remove(colorFragment);
+            fragmentTransaction.commit();
+        }
+        button.setText("Start");
+        button.setBackgroundColor(Color.GREEN);
+    }
+
     private void startRecordingVideo() {
         if (null == cameraDevice || !textureView.isAvailable() || null == imageDimension) {
             return;
         }
 
         try {
-            //colorMap = createRandomColorMap();
             colorARGB = new ColorARGB();
-            iterations = 4;
+            setRandomColorARGB(colorARGB);
             closePreviewSession();
 
             //A new file must be created before setting up the output file on setUpMediaRecorder
-            filename = String.valueOf(System.currentTimeMillis());
+            filename = System.currentTimeMillis() + "_" + colorARGB.getRed() + "_" + colorARGB.getGreen() + "_" + colorARGB.getBlue();
             videoFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".MP4");
-            textFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".txt");
-            writer = new BufferedWriter(new FileWriter(textFile));
+//            textFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".txt");
+//            writer = new BufferedWriter(new FileWriter(textFile));
 
             setUpMediaRecorder();
+
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
@@ -303,44 +340,39 @@ public class FrontCameraActivity extends AppCompatActivity{
                         @Override
                         public void run() {
                             // UI
-                            button.setText("Stop");
-                            button.setBackgroundColor(Color.TRANSPARENT);
-                            mIsRecordingVideo = true;
-
-                            FragmentManager fragmentManager = getSupportFragmentManager();
-                            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                            fragmentTransaction.add(R.id.activity_main, colorFragment);
-                            fragmentTransaction.commit();
-
-                            colorChangeRunnable = new Runnable(){
-                                public void run(){
-                                    try{
-                                        if(colorFragment.isAdded() && iterations > 0){
-//                                                String key = getRandomColorKey(colorMap);
-//                                                assert key != null;
-//                                                Integer newColor = colorMap.get(key);
-//                                                assert newColor != null;
-//                                                colorMap.remove(key);
-//                                                writer.write(key + "_");
-                                                setRandomColorARGB(colorARGB);
-                                                writer.write("(" + colorARGB.getRed() + "," + colorARGB.getGreen() + "," + colorARGB.getBlue() + ")" + "\n");
-                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(colorARGB.getColor());
-                                            handler.postDelayed(this, delay);
-                                            iterations--;
-                                        }else{
-                                            handler.removeCallbacksAndMessages(null);
-                                            if(mIsRecordingVideo){
-                                                stopRecordingVideo();
-                                            }
-                                        }
-                                    }catch (IOException e){
-                                        Toast.makeText(getBaseContext(), "Problem in writting text file", Toast.LENGTH_LONG).show();
-                                    }
+                            try{
+                                if(colorFragment.isAdded()){
+//                                    writer.write("(" + colorARGB.getRed() + "," + colorARGB.getGreen() + "," + colorARGB.getBlue() + ")" + "\n");
+                                    colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(colorARGB.getColor());
+                                    mMediaRecorder.start();
+                                    mIsRecordingVideo = true;
                                 }
-                            };
-                            handler.postDelayed(colorChangeRunnable, delay);
-                            // Start recording
-                            mMediaRecorder.start();
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+//                            colorChangeRunnable = new Runnable(){
+//                                public void run(){
+//                                    try{
+//                                        if(colorFragment.isAdded() && iterations > 0){
+//                                                setRandomColorARGB(colorARGB);
+//                                                writer.write("(" + colorARGB.getRed() + "," + colorARGB.getGreen() + "," + colorARGB.getBlue() + ")" + "\n");
+//                                                colorFragment.getActivity().findViewById(R.id.full_screen_layout).setBackgroundColor(colorARGB.getColor());
+//                                            handler.postDelayed(this, delay);
+//                                            iterations--;
+//                                        }else{
+//                                            handler.removeCallbacksAndMessages(null);
+//                                            if(mIsRecordingVideo){
+//                                                stopRecordingVideo();
+//                                            }
+//                                        }
+//                                    }catch (IOException e){
+//                                        Toast.makeText(getBaseContext(), "Problem in writting text file", Toast.LENGTH_LONG).show();
+//                                    }
+//                                }
+//                            };
+//                            handler.postDelayed(colorChangeRunnable, delay);
+//                            // Start recording
+//                            mMediaRecorder.start();
                         }
                     });
                 }
@@ -412,26 +444,17 @@ public class FrontCameraActivity extends AppCompatActivity{
     private void stopRecordingVideo() {
         // UI
         mIsRecordingVideo = false;
-        button.setText("Start");
-        button.setBackgroundColor(Color.GREEN);
         // Stop recording
         mMediaRecorder.stop();
         mMediaRecorder.reset();
-        if(colorFragment.isAdded()){
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-            fragmentTransaction.remove(colorFragment);
-            fragmentTransaction.commit();
-        }
+//        try {
+//            writer.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
-        try {
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Toast.makeText(FrontCameraActivity.this, "Video saved: " + videoFile.toString(),
-                Toast.LENGTH_SHORT).show();
+//        Toast.makeText(FrontCameraActivity.this, "Video saved: " + videoFile.toString(),
+//                Toast.LENGTH_SHORT).show();
         createCameraPreview();
     }
 
