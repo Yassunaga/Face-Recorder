@@ -274,6 +274,9 @@ public class FrontCameraActivity extends AppCompatActivity{
 
 
     private void finishRecord(){
+        if(mIsRecordingVideo){
+            stopRecordingVideo();
+        }
         isRecordingSessionRunning = false;
         handler.removeCallbacksAndMessages(null);
         if(colorFragment.isAdded()){
