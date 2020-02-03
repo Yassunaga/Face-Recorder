@@ -83,7 +83,6 @@ public class FrontCameraActivity extends AppCompatActivity{
     private Integer mSensorOrientation;
     private ColorFragment colorFragment;
     private ColorARGB colorARGB;
-    private int iterations;
     private Random random;
     private boolean isRecordingSessionRunning = false;
 
@@ -91,6 +90,7 @@ public class FrontCameraActivity extends AppCompatActivity{
     private Handler handler;
     private final int delay = 1000; //milliseconds
     private String filename;
+    private String Ckey;
 
     private File videoFile;
     private File textFile;
@@ -114,6 +114,8 @@ public class FrontCameraActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_front_camera);
+
+        Ckey = getIntent().getStringExtra(InputKeyActivity.KEY);
 
         textureView = findViewById(R.id.tvRecordVideo);
         button = findViewById(R.id.btnRecord);
@@ -293,7 +295,7 @@ public class FrontCameraActivity extends AppCompatActivity{
             closePreviewSession();
 
             //A new file must be created before setting up the output file on setUpMediaRecorder
-            filename = System.currentTimeMillis() + "_" + colorARGB.getRed() + "_" + colorARGB.getGreen() + "_" + colorARGB.getBlue();
+            filename = Ckey + "_" + colorARGB.getRed() + "_" + colorARGB.getGreen() + "_" + colorARGB.getBlue();
             videoFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".MP4");
 //            textFile = new File(Environment.getExternalStoragePublicDirectory(DIRECTORY_PICTURES) + "/" + filename + ".txt");
 //            writer = new BufferedWriter(new FileWriter(textFile));
