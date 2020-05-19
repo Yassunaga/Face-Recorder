@@ -255,7 +255,7 @@ public class FrontCameraActivity extends AppCompatActivity{
         fragmentTransaction.add(R.id.activity_main, colorFragment);
         fragmentTransaction.commit();
 
-        button.setText("Stop");
+        button.setText("Parar");
         button.setBackgroundColor(Color.TRANSPARENT);
 
         colorChangeRunnable = new Runnable(){
@@ -284,9 +284,9 @@ public class FrontCameraActivity extends AppCompatActivity{
             fragmentTransaction.remove(colorFragment);
             fragmentTransaction.commit();
         }
-        Toast.makeText(FrontCameraActivity.this, "Video saved: " + videoFile.toString(),
+        Toast.makeText(FrontCameraActivity.this, "Vídeo salvo em: " + videoFile.toString(),
                 Toast.LENGTH_SHORT).show();
-        button.setText("Start");
+        button.setText("Iniciar");
         button.setBackgroundColor(Color.GREEN);
     }
 
