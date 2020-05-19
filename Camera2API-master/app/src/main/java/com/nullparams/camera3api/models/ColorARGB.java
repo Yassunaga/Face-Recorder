@@ -1,4 +1,4 @@
-package com.nullparams.camera2api.models;
+package com.nullparams.camera3api.models;
 
 public class ColorARGB {
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.nullparams.camera2api">
+    package="com.nullparams.camera3api">
 
     <uses-feature android:name="android.hardware.camera2.full" />
 
@@ -15,7 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/NoActionBar">
-        <activity android:name=".activities.InputKeyActivity">
+        <activity android:name="com.nullparams.camera3api.activities.InputActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -30,8 +30,8 @@
                 <data android:scheme="http" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.MainActivity" />
-        <activity android:name=".activities.FrontCameraActivity"/>
+        <activity android:name="com.nullparams.camera3api.activities.MainActivity" />
+        <activity android:name="com.nullparams.camera3api.activities.FrontCameraActivity"/>
     </application>
 
 </manifest>

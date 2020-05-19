@@ -1,4 +1,4 @@
-package com.nullparams.camera2api;
+package com.nullparams.camera3api;
 
 import android.content.Context;
 

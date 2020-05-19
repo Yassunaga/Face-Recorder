@@ -1,4 +1,4 @@
-package com.nullparams.camera2api.fragments;
+package com.nullparams.camera3api.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.nullparams.camera2api.R;
+import com.nullparams.camera3api.R;
 
 public class ColorFragment extends Fragment {
 

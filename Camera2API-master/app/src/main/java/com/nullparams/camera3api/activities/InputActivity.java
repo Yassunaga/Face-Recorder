@@ -1,4 +1,4 @@
-package com.nullparams.camera2api.activities;
+package com.nullparams.camera3api.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,9 +9,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.nullparams.camera2api.R;
+import com.nullparams.camera3api.R;
 
-public class InputKeyActivity extends AppCompatActivity {
+public class InputActivity extends AppCompatActivity {
 
     public static final String KEY = "key";
     private Button btnContinuar;
